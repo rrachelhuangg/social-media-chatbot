@@ -11,11 +11,9 @@ load_dotenv()
 
 @cl.on_chat_start
 async def query_llm():
-    # await cl.Message("Hello! I am Parker, your social media analysis chatbot.🦋🕸️").send()
-    await cl.Message("hello keertana").send()
+    await cl.Message("Hello! I'm Stark, your social media analysis chatbot.🧑‍💻😃").send()
     response = await cl.AskUserMessage(content = "what's your instagram username?", timeout = 120).send()
-    await run_command(response['output'])
-    #user's input is stored in response['output']
+    await run_command(response['output']) #user's input is stored in response['output']
     llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature = 0.7)
     conversation_memory = ConversationBufferMemory(memory_key="chat_history",
                                                    max_len=50,
