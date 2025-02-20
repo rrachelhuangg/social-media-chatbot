@@ -5,7 +5,7 @@ from langchain_openai import ChatOpenAI
 from langchain.chains import LLMChain
 from prompts import social_media_assistant_prompt_template
 from dotenv import load_dotenv
-from extract_data import download_followers, download_hashtags
+from extract_data import download_followers, download_hashtags, download_stories, download_saved
 
 #setting environment variables
 load_dotenv()
@@ -17,13 +17,21 @@ async def query_llm():
     user_name = ""
     if response is not None:
         username = await (download_followers(response['output']))
-        text = f"thank you {user_name}. the usernames of accounts you follow has been downloaded successfully."
+        text = f"thank you {user_name}. the accounts you follow have been downloaded successfully."
         await cl.Message(text).send()
     response = await cl.AskUserMessage("Do you want to query data related to posts under specific hashtags? Enter [y/n].").send()
     if response is not None and response['output'] in "yY":
         hashtags = await cl.AskUserMessage("Please enter the hashtags that you want to query in a list.").send()
         await download_hashtags(hashtags['output'])
         await cl.Message("data relating to these hashtags has completed downloading.").send()
+    response = await cl.AskUserMessage("Do you want to query data related to the stories on your feed? Enter [y/n].").send()
+    if response is not None and response['output'] in "yY":
+        await download_stories()
+        await cl.Message("data relating to your feed's stories has completed downloading.").send()
+    response = await cl.AskUserMessage("Do you want to query data related to your saved posts? Enter [y/n].").send()
+    if response is not None and response['output'] in "yY":
+        await download_saved()
+        await cl.Message("data relating to your saved posts has completed downloading.").send()
     llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature = 0.7)
     conversation_memory = ConversationBufferMemory(memory_key="chat_history",
                                                    max_len=50,
