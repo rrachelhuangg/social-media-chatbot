@@ -32,18 +32,6 @@ vector_store = QdrantVectorStore(
     embedding=embeddings,
 )
 
-#test usage of chunking docs
-loader = TextLoader("followers.txt")
-docs = loader.load()
-text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size = 1000,
-    chunk_overlap = 200,
-    add_start_index = True,
-)
-all_splits = text_splitter.split_documents(docs)
-
-document_ids = vector_store.add_documents(documents=all_splits)
-
 @cl.on_chat_start
 async def query_llm():
     llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature = 0.7)
@@ -55,6 +43,22 @@ async def query_llm():
     llm_chain = LLMChain(llm=llm, prompt = rag_prompt, memory=conversation_memory)
     cl.user_session.set("llm_chain", llm_chain)
     await cl.Message("hello! i'm stark, your social media analysis chatbot.").send()
+    response = await cl.AskUserMessage(content = "what's your instagram username?", timeout = 120).send()
+    user_name = ""
+    if response is not None:
+        username = await (download_general(response['output']))
+        text = f"thank you {user_name}. your data has been downloaded successfully."
+        loader = TextLoader("followed.txt")
+        docs = loader.load()
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size = 1000,
+            chunk_overlap = 200,
+            add_start_index = True,
+        )
+        all_splits = text_splitter.split_documents(docs)
+
+        document_ids = vector_store.add_documents(documents=all_splits)
+        await cl.Message(text).send()
 
 @cl.on_message 
 async def query_llm(message: cl.Message):
